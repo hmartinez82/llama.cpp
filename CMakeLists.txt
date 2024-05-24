@@ -131,6 +131,7 @@ option(LLAMA_SYCL                            "llama: use SYCL"                  
 option(LLAMA_SYCL_F16                        "llama: use 16 bit floats for sycl calculations"   OFF)
 set(LLAMA_SYCL_TARGET   "INTEL" CACHE STRING "llama: sycl target device")
 option(LLAMA_CPU_HBM                         "llama: use memkind for CPU HBM"                   OFF)
+option(LLAMA_QNN                             "llama: use Qualcomm Neural Network"               OFF)
 set(LLAMA_SCHED_MAX_COPIES  "4" CACHE STRING "llama: max input copies for pipeline parallelism")
 
 option(LLAMA_BUILD_TESTS                     "llama: build tests"    ${LLAMA_STANDALONE})
@@ -150,6 +151,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/scripts/build-info.cmake)
 #
 
 if (LLAMA_SYCL)
+    set(CMAKE_CXX_STANDARD 17)
+elseif(LLAMA_QNN)
     set(CMAKE_CXX_STANDARD 17)
 else()
     set(CMAKE_CXX_STANDARD 11)
@@ -864,6 +867,36 @@ if (LLAMA_CPU_HBM)
     target_link_libraries(ggml PUBLIC memkind)
 endif()
 
+if (LLAMA_QNN)
+    if (WIN32 AND (NOT MSVC))
+        message(FATAL_ERROR "Qualcomm QNN is only supported with Visual Studio on Windows")
+    endif()
+
+    if (DEFINED ENV{QNN_SDK_ROOT})
+        set(QNN_SDK_ROOT $ENV{QNN_SDK_ROOT})
+    else(DEFINED ENV{QNN_SDK_ROOT})
+        # Fallback for standard installation folder
+        # Get the first sub folder of C:\Qualcomm\AIStack\QAIRT
+        file(GLOB QNN_SDK_ROOT "C:/Qualcomm/AIStack/QAIRT/*")
+        if(NOT "${QNN_SDK_ROOT}" STREQUAL "")
+            list(GET QNN_SDK_ROOT 0 QNN_SDK_ROOT)
+        endif()
+    endif()
+
+    if("${QNN_SDK_ROOT}" STREQUAL "")
+        message(FATAL_ERROR "LLAMA_QNN is enabled but QNN_SDK_ROOT is not set. Is the QNN_SDK_ROOT environment variable set?")
+    endif()
+
+    message(STATUS "QNN SDK found at ${QNN_SDK_ROOT}")
+
+    set(LLAMA_EXTRA_INCLUDES ${LLAMA_EXTRA_INCLUDES} "${QNN_SDK_ROOT}/include/QNN")
+
+    set(GGML_HEADERS_QNN ggml-qnn.h)
+    set(GGML_SOURCES_QNN ggml-qnn.cpp)
+
+    add_compile_definitions(GGML_USE_QNN)
+endif()
+
 if (LLAMA_PERF)
     add_compile_definitions(GGML_PERF)
 endif()
@@ -1269,6 +1302,7 @@ add_library(ggml OBJECT
             ${GGML_SOURCES_VULKAN}    ${GGML_HEADERS_VULKAN}
             ${GGML_SOURCES_ROCM}      ${GGML_HEADERS_ROCM}
             ${GGML_SOURCES_LLAMAFILE} ${GGML_HEADERS_LLAMAFILE}
+            ${GGML_SOURCES_QNN}       ${GGML_HEADERS_QNN}
             )
 
 target_include_directories(ggml PUBLIC . ${LLAMA_EXTRA_INCLUDES})
