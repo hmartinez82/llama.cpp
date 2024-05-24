@@ -842,6 +842,7 @@ if (LLAMA_QNN)
     message(STATUS "QNN SDK found at ${QNN_SDK_ROOT}")
 
     set(LLAMA_EXTRA_INCLUDES ${LLAMA_EXTRA_INCLUDES} "${QNN_SDK_ROOT}/include/QNN")
+    set(LLAMA_EXTRA_INCLUDES ${LLAMA_EXTRA_INCLUDES} "${CMAKE_SOURCE_DIR}/ggml-qnn/dynalo/include")
 
     set(GGML_HEADERS_QNN ggml-qnn.h)
     set(GGML_SOURCES_QNN ggml-qnn.cpp)
