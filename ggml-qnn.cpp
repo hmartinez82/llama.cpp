@@ -4356,14 +4356,6 @@ static int ggml_get_n_tasks(struct ggml_tensor * node, int n_threads, int n_cur_
             n_tasks = n_threads;
         }
             break;
-        case GGML_OP_FLASH_ATTN: {
-            n_tasks = n_threads;
-        }
-            break;
-        case GGML_OP_FLASH_FF: {
-            n_tasks = n_threads;
-        }
-            break;
         case GGML_OP_FLASH_ATTN_BACK: {
             n_tasks = n_threads;
         }
