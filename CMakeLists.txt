@@ -129,7 +129,9 @@ option(LLAMA_SYCL                            "llama: use SYCL"                  
 option(LLAMA_SYCL_F16                        "llama: use 16 bit floats for sycl calculations"   OFF)
 set(LLAMA_SYCL_TARGET   "INTEL" CACHE STRING "llama: sycl target device")
 option(LLAMA_CPU_HBM                         "llama: use memkind for CPU HBM"                   OFF)
-option(LLAMA_QNN                             "llama: use Qualcomm Neural Network"               OFF)
+option(LLAMA_QNN                             "llama: use Qualcomm Neural Network (QNN) backend" OFF)
+option(LLAMA_QNN_DEBUG                       "llama: enable GGML QNN implementation debugging"  OFF)
+option(LLAMA_QNN_SDK_DEBUG                   "llama: enable QNN SDK debugging"                  OFF)
 set(LLAMA_SCHED_MAX_COPIES  "4" CACHE STRING "llama: max input copies for pipeline parallelism")
 
 option(LLAMA_BUILD_TESTS                     "llama: build tests"    ${LLAMA_STANDALONE})
@@ -827,6 +829,7 @@ if (LLAMA_QNN)
     if (DEFINED ENV{QNN_SDK_ROOT})
         set(QNN_SDK_ROOT $ENV{QNN_SDK_ROOT})
     else(DEFINED ENV{QNN_SDK_ROOT})
+        message(STATUS "QNN_SDK_ROOT envirionment variable set. Attempting to use default installation path")
         # Fallback for standard installation folder
         # Get the first sub folder of C:\Qualcomm\AIStack\QAIRT
         file(GLOB QNN_SDK_ROOT "C:/Qualcomm/AIStack/QAIRT/*")
@@ -836,18 +839,29 @@ if (LLAMA_QNN)
     endif()
 
     if("${QNN_SDK_ROOT}" STREQUAL "")
-        message(FATAL_ERROR "LLAMA_QNN is enabled but QNN_SDK_ROOT is not set. Is the QNN_SDK_ROOT environment variable set?")
+        message(FATAL_ERROR "LLAMA_QNN is enabled but the QNN SDK was not found. Set the QNN_SDK_ROOT environment and try again")
     endif()
 
     message(STATUS "QNN SDK found at ${QNN_SDK_ROOT}")
 
     set(LLAMA_EXTRA_INCLUDES ${LLAMA_EXTRA_INCLUDES} "${QNN_SDK_ROOT}/include/QNN")
-    set(LLAMA_EXTRA_INCLUDES ${LLAMA_EXTRA_INCLUDES} "${CMAKE_SOURCE_DIR}/ggml-qnn/dynalo/include")
+    set(LLAMA_EXTRA_INCLUDES ${LLAMA_EXTRA_INCLUDES} "${CMAKE_SOURCE_DIR}/ggml-qnn/dylib/include")
 
-    set(GGML_HEADERS_QNN ggml-qnn.h)
-    set(GGML_SOURCES_QNN ggml-qnn.cpp)
+    file(GLOB GGML_HEADERS_QNN "ggml-qnn/*.h")
+    file(GLOB GGML_SOURCES_QNN "ggml-qnn/*.cpp")
+
+    list(APPEND GGML_HEADERS_QNN ggml-qnn.h)
+    list(APPEND GGML_SOURCES_QNN ggml-qnn.cpp)
 
     add_compile_definitions(GGML_USE_QNN)
+
+    if (LLAMA_QNN_DEBUG)
+        add_compile_definitions(GGML_QNN_DEBUG)
+    endif()
+
+    if (LLAMA_QNN_SDK_DEBUG)
+        add_compile_definitions(GGML_QNN_SDK_DEBUG)
+    endif()
 endif()
 
 if (LLAMA_PERF)
