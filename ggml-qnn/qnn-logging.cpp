@@ -1,6 +1,7 @@
 #include <mutex>
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
 #include <QnnLog.h>
 
 #include "qnn-logging.h"
@@ -35,7 +36,7 @@ void qnn_logcallback(const char * fmt, QnnLog_Level_t level, uint64_t timestamp,
 
     memset(logbuf, 0, GGML_QNN_LOGBUF_LEN);
     vsnprintf(reinterpret_cast<char *const>(logbuf), GGML_QNN_LOGBUF_LEN, fmt, argp);
-    ggml_qnn_log_internal(ggml_level, __FILE__, __FUNCTION__, __LINE__, false, "%8.1fms %s", ms, logbuf);
+    ggml_qnn_log_internal(ggml_level, __FILE__, __FUNCTION__, __LINE__, true, "%8.2fms %s", ms, logbuf);
 
 }
 

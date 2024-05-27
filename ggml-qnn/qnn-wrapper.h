@@ -1,16 +1,36 @@
 #ifndef QNN_WRAPPER_H
 #define QNN_WRAPPER_H
 
-#include "qnn-interface-shim.h"
+#include <dylib.hpp>
+#include <memory>
+#include <filesystem>
+#include <functional>
+#include <string>
+
 #include <QnnInterface.h>
+#include <Saver/QnnSaver.h>
+
+#define DEFINE_SHIM_FUNCTION_INTERFACE(F, pointer_name)           \
+  template <typename... Args>                                     \
+  inline auto F(Args... args) const {                       \
+    return (_interface_instance->QNN_INTERFACE_VER_NAME.pointer_name)( \
+        std::forward<Args>(args)...);                             \
+  }
+
+using BackendIdType                                     = decltype(QnnInterface_t{}.backendId);
+
 
 /**
-*   Wrapper class of Qualcomm QNN(Qualcomm AI Engine Direct) SDK interface
+*   Wrapper class for Qualcomm QNN(AI Engine Direct) SDK interface
 */
 class qnn_wrapper {
 
 public:
-    qnn_wrapper() = default;
+    qnn_wrapper(const std::filesystem::path & lib_folder, const std::string & backend_name);
+
+    ~qnn_wrapper() {
+        unload();
+    }
 
     // QnnBackend
     DEFINE_SHIM_FUNCTION_INTERFACE(backend_create, backendCreate);
@@ -87,21 +107,40 @@ public:
 
     DEFINE_SHIM_FUNCTION_INTERFACE(tensor_create_graph_tensor, tensorCreateGraphTensor);
 
+    BackendIdType get_backend_id() const;
 
-    void set_qnn_interface(const QnnInterface_t * qnn_interface) {
-        _qnn_interface = qnn_interface;
-    }
+    bool is_loaded() const;
 
-    uint32_t get_backend_id() const {
-        return _qnn_interface->backendId;
-    }
+    int load(const QnnDevice_Config_t* device_config);
 
-    bool is_loaded() const {
-        return (_qnn_interface != nullptr);
-    }
+    void unload();
 
 private:
-    const QnnInterface_t *_qnn_interface = nullptr;
+    using pfn_QnnInterface_getProviders                    = decltype(QnnInterface_getProviders);
+
+    using pfn_QnnSaver_initialize                          = decltype(QnnSaver_initialize);
+
+    static constexpr const int s_required_num_providers = 1;
+
+    std::shared_ptr<dylib> _lib;
+
+    const QnnInterface_t* _interface_instance = nullptr;
+
+    Qnn_LogHandle_t _qnn_log_handle = nullptr;
+
+    Qnn_BackendHandle_t _qnn_backend_handle = nullptr;
+
+    Qnn_DeviceHandle_t _qnn_device_handle = nullptr;
+
+    Qnn_ContextHandle_t _qnn_context_handle = nullptr;
+
+    Qnn_ProfileHandle_t _qnn_profile_handle = nullptr;
+
+    const std::filesystem::path _lib_folder;
+
+    const std::string _backend_name;
+
+    int load_interface(const std::filesystem::path & lib_folder, const std::string & lib_name);
 };
 
 #endif // QNN_WRAPPER_H

@@ -11,10 +11,9 @@ extern "C" {
 #define GGML_QNN_NAME           "QNN"
 #define GGML_QNN_MAX_DEVICES    1
 
-//Only support for QNN CPU/GPU/HTP(aka DSP) backends for now
+//Only support for QNN CPU/HTP backends for now
 enum QNNBackend {
     QNN_CPU,
-    QNN_GPU,
     QNN_HTP,
 };
 
@@ -22,7 +21,7 @@ GGML_API int            ggml_backend_qnn_reg_devices(void);
 
 /**
  *
- * @param device            0: QNN_CPU 1: QNN_GPU 2: QNN_HTP(aka DSP)
+ * @param device            0: QNN_CPU 1: QNN_HTP
  * @param qnn_lib_path      qnn library path, such as "/data/data/com.ggml.llamacpp/"
  *                          which can be obtained through JNI from Java layer
  * @return
