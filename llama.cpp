@@ -2436,6 +2436,8 @@ static size_t llama_get_device_count(const llama_model & model) {
     return ggml_backend_sycl_get_device_count();
 #elif defined(GGML_USE_VULKAN)
     return ggml_backend_vk_get_device_count();
+#elif defined(GGML_USE_QNN)
+    return ggml_backend_qnn_get_device_count();
 #else
     return 1;
 #endif
@@ -16393,7 +16395,7 @@ struct llama_context * llama_new_context_with_model(
             //the second param is data path of prebuit QNN libs provided by Qualcomm
             //can be obtained through JNI from Java layer such as "/data/data/com.ggml.llamacpp/"
             //or hardcoded to "/data/local/tmp/"
-            ggml_backend_t backend = ggml_backend_qnn_init(model->main_gpu, R"(C:\Qualcomm\AIStack\QAIRT\2.22.6.240515\lib\x86_64-windows-msvc)");
+            ggml_backend_t backend = ggml_backend_qnn_init(model->main_gpu, R"(C:\Qualcomm\AIStack\QAIRT\2.22.6.240515\lib\x86_64-windows-msvc\)");
             if (nullptr == backend) {
                 LLAMA_LOG_ERROR("%s: failed to initialize QNN backend\n", __func__);
                 llama_free(ctx);
