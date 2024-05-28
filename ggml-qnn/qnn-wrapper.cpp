@@ -1,8 +1,7 @@
 #include "qnn-wrapper.h"
 #include "qnn-logging.h"
 
-qnn_wrapper::qnn_wrapper(const std::filesystem::path & lib_folder, const std::string & backend_name) :
-    _lib_folder(lib_folder), _backend_name(backend_name) {
+qnn_wrapper::qnn_wrapper(const std::string & backend_name) : _backend_name(backend_name) {
 
 }
 
@@ -14,7 +13,7 @@ bool qnn_wrapper::is_loaded() const {
     return (_interface_instance != nullptr);
 }
 
-int qnn_wrapper::load(const QnnDevice_Config_t* device_config) {
+int qnn_wrapper::load(const std::filesystem::path & lib_folder, const QnnDevice_Config_t* device_config) {
     int ret = load_interface(_lib_folder, _backend_name);
 
     if (ret != 0) {

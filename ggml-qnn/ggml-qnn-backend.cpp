@@ -33,8 +33,8 @@ int ggml_qnn_backend::init(std::initializer_list<BackendIdType> backends_to_init
             QNN_LOG_ERROR("Unsupported backend id %d", backend_id);
         }
 
-        std::shared_ptr<qnn_wrapper>wrapper = make_shared<qnn_wrapper>(_lib_path, backend_name);
-        int load_error = wrapper->load(nullptr);
+        std::shared_ptr<qnn_wrapper>wrapper = make_shared<qnn_wrapper>(backend_name);
+        int load_error = wrapper->load(_lib_path, nullptr);
         if(0 != load_error)
         {
             QNN_LOG_WARN("Failed to load %s backend", backend_name);

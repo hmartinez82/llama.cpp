@@ -10,6 +10,8 @@
 #include <QnnInterface.h>
 #include <Saver/QnnSaver.h>
 
+#include "ggml-backend.h"
+
 #define DEFINE_SHIM_FUNCTION_INTERFACE(F, pointer_name)           \
   template <typename... Args>                                     \
   inline auto F(Args... args) const {                       \
@@ -26,7 +28,7 @@ using BackendIdType                                     = decltype(QnnInterface_
 class qnn_wrapper {
 
 public:
-    qnn_wrapper(const std::filesystem::path & lib_folder, const std::string & backend_name);
+    qnn_wrapper(const std::string & backend_name);
 
     ~qnn_wrapper() {
         unload();
@@ -111,9 +113,30 @@ public:
 
     bool is_loaded() const;
 
-    int load(const QnnDevice_Config_t* device_config);
+    int load(const std::filesystem::path & lib_folder, const QnnDevice_Config_t* device_config = nullptr);
 
     void unload();
+
+    // GGML backend interface
+    const char * ggml_backend_qnn_buffer_get_name() const;
+
+    void ggml_backend_qnn_buffer_free_buffer();
+
+    ggml_backend_buffer_t ggml_backend_qnn_buffer_type_alloc_buffer(size_t size);
+
+    size_t ggml_backend_qnn_buffer_type_get_alignment();
+
+    size_t ggml_backend_qnn_buffer_type_get_max_size();
+
+    bool ggml_backend_qnn_buffer_type_supports_backend(ggml_backend_t backend);
+
+    bool ggml_backend_qnn_buffer_is_host();
+
+    //void ggml_backend_qnn_buffer_init_tensor(ggml_tensor * tensor);
+    //void ggml_backend_qnn_buffer_set_tensor(ggml_tensor * tensor, const void * data, size_t offset, size_t size);
+    //void ggml_backend_qnn_buffer_get_tensor(const ggml_tensor * tensor, void * data, size_t offset, size_t size);
+    //bool ggml_backend_qnn_buffer_cpy_tensor(const struct ggml_tensor * src, struct ggml_tensor * dst);
+    //void ggml_backend_qnn_buffer_synchronize();
 
 private:
     using pfn_QnnInterface_getProviders                    = decltype(QnnInterface_getProviders);

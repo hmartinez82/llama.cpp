@@ -2,14 +2,7 @@
 #define QNN_LOGGING_H
 
 #include <QnnLog.h>
-
-//#include <ggml.h>
-enum ggml_log_level {
-    GGML_LOG_LEVEL_ERROR = 2,
-    GGML_LOG_LEVEL_WARN  = 3,
-    GGML_LOG_LEVEL_INFO  = 4,
-    GGML_LOG_LEVEL_DEBUG = 5
-};
+#include <ggml.h>
 
 #define GGML_QNN_LOGBUF_LEN                             4096
 
