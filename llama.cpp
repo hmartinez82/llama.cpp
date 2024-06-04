@@ -1748,29 +1748,6 @@ static ggml_backend_buffer_type_t llama_default_buffer_type_cpu(bool host_buffer
     GGML_UNUSED(host_buffer);
 }
 
-static ggml_backend_buffer_type_t llama_default_buffer_type_split(int fallback_gpu, const float * tensor_split) {
-    ggml_backend_buffer_type_t buft = nullptr;
-
-#ifdef GGML_USE_CUDA
-    if (ggml_backend_cuda_get_device_count() > 1) {
-        buft = ggml_backend_cuda_split_buffer_type(tensor_split);
-    }
-#endif
-
-#ifdef GGML_USE_SYCL
-    if (ggml_backend_sycl_get_device_count() > 1) {
-        buft = ggml_backend_sycl_split_buffer_type(tensor_split);
-    }
-#endif
-
-    if (buft == nullptr) {
-        buft = llama_default_buffer_type_offload(fallback_gpu);
-    }
-    return buft;
-
-    GGML_UNUSED(tensor_split);
-}
-
 //
 // globals
 //
@@ -2410,7 +2387,6 @@ static size_t llama_get_device_count(const llama_model & model) {
 #if defined(GGML_USE_RPC)
     count += model.rpc_servers.size();
 #endif
-
     return count;
     GGML_UNUSED(model);
 }
