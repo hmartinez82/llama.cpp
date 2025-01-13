@@ -588,7 +588,13 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
         }
     };
 
-
+    add_opt(common_arg(
+        {"runner"},
+        "print usage and exit",
+        [](common_params &) {
+            // Do nothing, skip ollama's 'runner' parameter
+        }
+    ));
     add_opt(common_arg(
         {"-h", "--help", "--usage"},
         "print usage and exit",
